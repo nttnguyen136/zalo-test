@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpClientModule,
+  HttpHeaders,
+} from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { map, tap } from 'rxjs';
 
@@ -40,6 +44,8 @@ export class AppComponent {
   app_id = '';
   secret_key = '';
   code_challenge: string = '';
+
+  accessTokenData: any;
 
   queryParams: any = {};
   param$ = this.route.queryParamMap.pipe(
@@ -99,29 +105,32 @@ export class AppComponent {
         grant_type: 'authorization_code',
         code_verifier: this.code_verifier,
       }),
-    }).then(console.log);
+    })
+      .then((r) => r.json())
+      .then((data) => (this.accessTokenData = data));
   }
 
   signIn() {
+    const headers = new HttpHeaders();
+
+    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+    headers.append('secret_key', this.secret_key);
+
+    const formData = new FormData();
+
+    formData.append('code', this.queryParams);
+    formData.append('app_id', this.app_id);
+    formData.append('grant_type', 'authorization_code');
+    formData.append('code_verifier', this.code_verifier);
+
     this.http
-      .post(
-        'https://oauth.zaloapp.com/v4/access_token',
-        {
-          code: this.queryParams.code,
-          app_id: this.app_id,
-          grant_type: 'authorization_code',
-          code_verifier: this.code_verifier,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            secret_key: this.secret_key,
-          },
-        }
-      )
+      .post('https://oauth.zaloapp.com/v4/access_token', formData, {
+        headers,
+      })
       .subscribe({
-        next: (res) => {
-          console.log(res);
+        next: (data) => {
+          console.log(data);
+          this.accessTokenData = data;
         },
         error: (errr) => {
           console.log(errr);
