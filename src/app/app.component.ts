@@ -49,7 +49,17 @@ export class AppComponent {
     })
   );
 
-  constructor(private http: HttpClient, private route: ActivatedRoute) {}
+  constructor(private http: HttpClient, private route: ActivatedRoute) {
+    const data = localStorage.getItem('DATA');
+    if (data) {
+      const { state, code_verifier, app_id, secret_key } = JSON.parse(data);
+
+      this.state = state;
+      this.code_verifier = code_verifier;
+      this.app_id = app_id;
+      this.secret_key = secret_key;
+    }
+  }
 
   async login() {
     const redirect_uri = 'https://zalotest.vercel.app/';
@@ -59,11 +69,37 @@ export class AppComponent {
         this.code_verifier
       );
 
+      localStorage.setItem(
+        'DATA',
+        JSON.stringify({
+          state: this.state,
+          code_verifier: this.code_verifier,
+          app_id: this.app_id,
+          secret_key: this.secret_key,
+        })
+      );
+
       window.open(
         `https://oauth.zaloapp.com/v4/permission?app_id=${this.app_id}&redirect_uri=${redirect_uri}&code_challenge=${this.code_challenge}&state=${this.state}`,
         '_self'
       );
     }
+  }
+
+  signIn2() {
+    fetch('https://oauth.zaloapp.com/v4/access_token', {
+      method: 'POST',
+      headers: {
+        secret_key: this.secret_key,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code: this.queryParams.code,
+        app_id: this.app_id,
+        grant_type: 'authorization_code',
+        code_verifier: this.code_verifier,
+      }),
+    }).then(console.log);
   }
 
   signIn() {
@@ -73,7 +109,7 @@ export class AppComponent {
         {
           code: this.queryParams.code,
           app_id: this.app_id,
-          grant_type: 'authorization',
+          grant_type: 'authorization_code',
           code_verifier: this.code_verifier,
         },
         {
