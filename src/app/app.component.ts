@@ -4,7 +4,7 @@ import {
   HttpClientModule,
   HttpHeaders,
 } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { map, tap } from 'rxjs';
 
 function sha256(plain: string) {
@@ -55,7 +55,11 @@ export class AppComponent {
     })
   );
 
-  constructor(private http: HttpClient, private route: ActivatedRoute) {
+  constructor(
+    private http: HttpClient,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
     const data = localStorage.getItem('DATA');
     if (data) {
       const { state, code_verifier, app_id, secret_key } = JSON.parse(data);
@@ -107,7 +111,12 @@ export class AppComponent {
       }),
     })
       .then((r) => r.json())
-      .then((data) => (this.accessTokenData = data));
+      .then((data) => {
+        if (data) {
+          localStorage.setItem('TOKEN', JSON.stringify(data));
+        }
+        this.accessTokenData = data;
+      });
   }
 
   signIn() {
@@ -118,7 +127,7 @@ export class AppComponent {
 
     const formData = new FormData();
 
-    formData.append('code', this.queryParams);
+    formData.append('code', this.queryParams.code);
     formData.append('app_id', this.app_id);
     formData.append('grant_type', 'authorization_code');
     formData.append('code_verifier', this.code_verifier);
@@ -129,12 +138,46 @@ export class AppComponent {
       })
       .subscribe({
         next: (data) => {
-          console.log(data);
           this.accessTokenData = data;
+          if (data) {
+            localStorage.setItem('TOKEN', JSON.stringify(data));
+          }
         },
         error: (errr) => {
           console.log(errr);
         },
+      });
+  }
+
+  clearAll(isLogout = false) {
+    if (isLogout) {
+      localStorage.removeItem('TOKEN');
+    } else {
+      localStorage.clear();
+    }
+
+    this.router.navigate(['.'], { relativeTo: this.route });
+  }
+  getUser(accessToken: string) {
+    let access_token = accessToken;
+    if (accessToken == undefined) {
+      const token = localStorage.getItem('TOKEN');
+
+      const { access_token: aToken } = token
+        ? JSON.parse(token)
+        : { access_token };
+
+      access_token = aToken;
+    }
+
+    const headers = new HttpHeaders();
+
+    headers.append('access_token', access_token);
+
+    this.http
+      .get('https://graph.zalo.me/v2.0/me', { headers })
+      .subscribe((data) => {
+        console.log(data);
       });
   }
 }
