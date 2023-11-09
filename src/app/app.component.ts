@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 function sha256(plain: string) {
   // returns promise ArrayBuffer
@@ -39,10 +39,14 @@ export class AppComponent {
   code_verifier = '';
   app_id = '';
   secret_key = '';
+  code_challenge: string = '';
 
   queryParams: any = {};
   param$ = this.route.queryParamMap.pipe(
-    tap((data) => (this.queryParams = data))
+    map((data: any) => {
+      this.queryParams = data['params'];
+      return this.queryParams;
+    })
   );
 
   constructor(private http: HttpClient, private route: ActivatedRoute) {}
@@ -51,12 +55,12 @@ export class AppComponent {
     const redirect_uri = 'https://zalotest.vercel.app/';
 
     if (this.code_verifier && this.app_id) {
-      const code_challenge = await pkce_challenge_from_verifier(
+      this.code_challenge = await pkce_challenge_from_verifier(
         this.code_verifier
-      ).catch(console.log);
+      );
 
       window.open(
-        `https://oauth.zaloapp.com/v4/permission?app_id=${this.app_id}&redirect_uri=${redirect_uri}&code_challenge=${code_challenge}&state=${this.state}`,
+        `https://oauth.zaloapp.com/v4/permission?app_id=${this.app_id}&redirect_uri=${redirect_uri}&code_challenge=${this.code_challenge}&state=${this.state}`,
         '_self'
       );
     }

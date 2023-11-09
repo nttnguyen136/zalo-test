@@ -12,12 +12,14 @@
   input {
     border-radius: 4px;
     padding: 4px;
+    flex: 1;
   }
 }
 
 .flex {
   display: flex;
   gap: 20px;
+  flex-direction: column;
 }
 
 .show {
@@ -25,4 +27,6 @@
   border-radius: 4px;
   padding: 8px;
   text-wrap: wrap;
+  max-width: 600px;
+  word-wrap: break-word;
 }
