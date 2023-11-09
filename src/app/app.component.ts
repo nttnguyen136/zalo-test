@@ -1,11 +1,7 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component } from '@angular/core';
-import {
-  HttpClient,
-  HttpClientModule,
-  HttpHeaders,
-} from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 
 function sha256(plain: string) {
   // returns promise ArrayBuffer
@@ -37,21 +33,22 @@ async function pkce_challenge_from_verifier(v: string) {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  title = 'zalo-test';
+  title = 'Login with Zalo';
 
   state = '';
   code_verifier = '';
   app_id = '';
   secret_key = '';
   code_challenge: string = '';
-
   accessTokenData: any;
+
+  user: any;
 
   queryParams: any = {};
   param$ = this.route.queryParamMap.pipe(
     map((data: any) => {
       this.queryParams = data['params'];
-      return this.queryParams;
+      return this.queryParams?.code ? this.queryParams : null;
     })
   );
 
@@ -96,7 +93,7 @@ export class AppComponent {
     }
   }
 
-  signIn2() {
+  signIn() {
     fetch('https://oauth.zaloapp.com/v4/access_token', {
       method: 'POST',
       headers: {
@@ -116,36 +113,8 @@ export class AppComponent {
           localStorage.setItem('TOKEN', JSON.stringify(data));
         }
         this.accessTokenData = data;
-      });
-  }
 
-  signIn() {
-    const headers = new HttpHeaders();
-
-    headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    headers.append('secret_key', this.secret_key);
-
-    const formData = new FormData();
-
-    formData.append('code', this.queryParams.code);
-    formData.append('app_id', this.app_id);
-    formData.append('grant_type', 'authorization_code');
-    formData.append('code_verifier', this.code_verifier);
-
-    this.http
-      .post('https://oauth.zaloapp.com/v4/access_token', formData, {
-        headers,
-      })
-      .subscribe({
-        next: (data) => {
-          this.accessTokenData = data;
-          if (data) {
-            localStorage.setItem('TOKEN', JSON.stringify(data));
-          }
-        },
-        error: (errr) => {
-          console.log(errr);
-        },
+        this.getUser(data.access_token);
       });
   }
 
@@ -158,9 +127,10 @@ export class AppComponent {
 
     this.router.navigate(['.'], { relativeTo: this.route });
   }
+
   getUser(accessToken: string) {
     let access_token = accessToken;
-    if (accessToken == undefined) {
+    if (!accessToken) {
       const token = localStorage.getItem('TOKEN');
 
       const { access_token: aToken } = token
@@ -174,10 +144,14 @@ export class AppComponent {
 
     headers.append('access_token', access_token);
 
-    this.http
-      .get('https://graph.zalo.me/v2.0/me', { headers })
-      .subscribe((data) => {
-        console.log(data);
-      });
+    console.log(access_token);
+
+    fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
+      headers: {
+        access_token,
+      },
+    })
+      .then((data) => data.json())
+      .then((data) => (this.user = data));
   }
 }

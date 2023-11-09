@@ -23,10 +23,22 @@
 }
 
 .show {
-  border: 1px saddlebrown solid;
+  border: 1px rgb(197, 197, 197) solid;
   border-radius: 4px;
   padding: 8px;
   text-wrap: wrap;
   max-width: 600px;
   word-wrap: break-word;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 20px;
+  img {
+    width: 80px;
+    border-radius: 999px;
+    overflow: hidden;
+  }
 }

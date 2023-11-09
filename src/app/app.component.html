@@ -433,7 +433,7 @@
       >
         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
       </svg>
-      <span> Zalo Login </span>
+      <span> Step 1. Grant </span>
     </button>
     <button class="card card-small" tabindex="0" (click)="signIn()">
       <svg
@@ -445,19 +445,7 @@
       >
         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
       </svg>
-      <span> Sign In </span>
-    </button>
-    <button class="card card-small" tabindex="0" (click)="signIn2()">
-      <svg
-        class="material-icons"
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-      >
-        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-      </svg>
-      <span> Sign In 2</span>
+      <span> Step 2. Sign In </span>
     </button>
 
     <button class="card card-small" tabindex="0" (click)="clearAll()">
@@ -512,6 +500,16 @@
     </div>
     <div class="show" *ngIf="code_challenge">
       {{ {code_challenge} | json }}
+    </div>
+
+    <div class="show" *ngIf="user">
+      <div class="user-box">
+        <img [src]="user.picture?.data?.url" alt="" />
+        <div>
+          <div><b>Id:</b> {{ user.id - 1000 }}</div>
+          <div><b>Name:</b> {{ user.name }}</div>
+        </div>
+      </div>
     </div>
   </div>
 
